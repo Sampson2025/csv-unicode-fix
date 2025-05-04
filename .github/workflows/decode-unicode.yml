@@ -1,0 +1,41 @@
+name: Decode Unicode in CSV
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+
+    - name: Decode Unicode in CSV
+      run: |
+        python -c "
+        import re
+        with open('111_nobom.csv', 'r', encoding='utf-8') as file:
+            content = file.read()
+        decoded = re.sub(r'u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), content)
+        with open('111_decoded.csv', 'w', encoding='utf-8') as file:
+            file.write(decoded)
+        "
+
+    - name: Commit decoded file
+      run: |
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'action@github.com'
+        git add 111_decoded.csv
+        git commit -m 'Add decoded CSV file'
+        git push
